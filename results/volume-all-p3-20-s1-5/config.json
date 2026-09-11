@@ -1,0 +1,20 @@
+{
+  "bits_prec": 100,
+  "certify": false,
+  "diagram_simplify": "pickup",
+  "dry_run": false,
+  "isometry_signatures": false,
+  "p_max": 20,
+  "p_min": 3,
+  "q_max": null,
+  "q_min": 1,
+  "r_max": null,
+  "r_min": null,
+  "region": "all",
+  "retries": 5,
+  "s_max": 5,
+  "s_min": 1,
+  "volume_epsilon": 1e-07,
+  "volume_scope": "all",
+  "volume_tolerance": 1e-08
+}

@@ -1,0 +1,19 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite the accompanying paper."
+title: "Computations for twisted torus knots in the complementary range"
+type: software
+authors:
+  - family-names: "Adnan"
+  - family-names: "Park"
+    given-names: "Kyungbae"
+version: 1.0.0
+date-released: 2026-09-11
+license: MIT
+preferred-citation:
+  type: article
+  authors:
+    - family-names: "Adnan"
+    - family-names: "Park"
+      given-names: "Kyungbae"
+  title: "The Alexander polynomial of twisted torus knots in the complementary range"
+  year: 2026

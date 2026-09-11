@@ -1,0 +1,19 @@
+{
+  "alexander_collision_groups": 650,
+  "alexander_groups_mixing_known_torus_and_hyperbolic": 0,
+  "collision_verdict_insufficient_hyperbolic_members": 392,
+  "collision_verdict_same_volume_within_tolerance": 258,
+  "elapsed_seconds": 17.873,
+  "knots_in_alexander_collision_groups": 2929,
+  "same_alexander_different_signature_pairs": 0,
+  "same_alexander_different_volume_pairs": 0,
+  "same_volume_different_alexander_pairs": 0,
+  "status_hyperbolic_numerical": 586,
+  "status_known_nonhyperbolic_torus": 2655,
+  "status_not_requested": 9132,
+  "status_unresolved": 62,
+  "total_knots": 12435,
+  "unique_alexander_polynomials": 10156,
+  "volume_scope": "collisions",
+  "volume_tolerance": 1e-08
+}

@@ -1,0 +1,3 @@
+SnapPy==3.2
+Spherogram==2.3
+knot_floer_homology==1.2.2

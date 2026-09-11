@@ -1,0 +1,10 @@
+{
+  "total": 52,
+  "computed": 52,
+  "fibered": 52,
+  "nonfibered": 0,
+  "top_rank_not_one": 0,
+  "genus_mismatches": 0,
+  "timeouts": 0,
+  "errors": 0
+}
