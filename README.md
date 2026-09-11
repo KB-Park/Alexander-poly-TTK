@@ -20,6 +20,9 @@ Spherogram and Szabó's HFK Calculator.
 
 ## Contents
 
+- `code/alexander_polynomial.py`: standalone implementation of the
+  unified formula for all nonzero relatively prime integers \(p,q\),
+  \(1<r<|p|+|q|\), and every integer \(s\).
 - `code/generalized_ttk_volume_experiment.py`: Alexander-polynomial and
   hyperbolic-volume experiment, with checkpointing and optional interval
   certification.
@@ -87,6 +90,48 @@ python code/check_non_l_space_family.py --k-max 100
 ```
 
 These three commands do not perform a large volume or HFK search.
+
+## Direct Alexander-polynomial calculation
+
+The main reusable functions are
+
+```python
+# Run from the repository's code/ directory, or add code/ to sys.path.
+from alexander_polynomial import (
+    alexander_coefficients,
+    alexander_polynomial,
+)
+
+coefficients = alexander_coefficients(p, q, r, s)
+polynomial = alexander_polynomial(p, q, r, s)
+```
+
+Here \(p,q\) may be any nonzero relatively prime integers,
+\(1<r<|p|+|q|\), and \(s\) may be any integer. The coefficient tuple is in
+ascending exponent order, normalized to have lowest exponent zero and
+positive leading coefficient. For example:
+
+```bash
+python code/alexander_polynomial.py 5 -3 6 2 --coefficients
+```
+
+The program uses
+
+\[
+T(p,q;r,s)\sim T(q,p;r,s),\qquad
+T(-p,-q;r,s)\sim T(p,q;r,s),
+\]
+
+and
+
+\[
+\overline{T(p,q;r,s)}\sim T(p,-q;r,-s)
+\]
+
+to reduce to \(P>Q>0\). Since the Alexander polynomial is invariant under
+mirroring, opposite signs of \(p,q\) replace \(s\) by \(-s\). The block
+formula is then evaluated exactly over the integers. The implementation also
+covers \(Q=1\), the boundary values \(r=P,Q\), and \(s=0\).
 
 ## Volume computations
 
