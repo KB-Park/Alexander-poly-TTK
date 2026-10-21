@@ -156,87 +156,11 @@ def torus_alexander_coefficients(p: int, q: int) -> tuple[int, ...]:
 
 
 def alexander_coefficients(parameters: Parameters) -> tuple[int, ...]:
-    """Return normalized dense coefficients from the unified formula.
+    """Use the shared adjusted-block formula, including r=1 and r=p+q."""
+    from alexander_polynomial import alexander_coefficients as unified_formula
 
-    The lowest exponent is zero and the leading coefficient is positive.
-    The r=1 case is handled separately because it is just T(p,q), including
-    the q=1 unknot boundary that is outside the formula's stated hypotheses.
-    """
     validate_parameters(parameters)
-    p, q, r, s = (
-        parameters.p,
-        parameters.q,
-        parameters.r,
-        parameters.s,
-    )
-    if r == 1:
-        return torus_alexander_coefficients(p, q)
-
-    if r == p + q:
-        from alexander_polynomial import alexander_coefficients as full_formula
-        return full_formula(p, q, r, s)
-
-    j_star = (-r * pow(p, -1, q)) % q
-    s_values = [(-j * p) % q for j in range(q)]
-    lengths_l = [(r - 1 - value) // q + 1 for value in s_values]
-
-    # Use the integer formula, not merely its congruence modulo p.  The
-    # distinction matters at r=q, where i_star=p rather than 0.
-    numerator_i = p * j_star + r
-    if numerator_i % q:
-        raise ArithmeticError("the unified index i_star is not integral")
-    i_star = p + 1 - numerator_i // q
-    t_values = [(-i * q) % p for i in range(p)]
-    lengths_m = [(r - 1 - value) // p + 1 for value in t_values]
-
-    cumulative_l: list[int] = []
-    total = 0
-    for value in lengths_l:
-        total += value
-        cumulative_l.append(total)
-
-    cumulative_m: list[int] = []
-    total = 0
-    for value in lengths_m:
-        total += value
-        cumulative_m.append(total)
-
-    lambda_star = (lengths_l[j_star] - 1) * s + 1
-    e_a = (
-        r * s * (cumulative_l[j_star - 1] if j_star else 0)
-        + p * j_star
-        + r * lambda_star
-    )
-    e_c = r * r * s + p * q
-
-    x_a = Counter(
-        r * s * cumulative_l[m] + p * m for m in range(j_star)
-    )
-    x_c = Counter(r * s * cumulative_l[m] + p * m for m in range(q))
-
-    suffix_m = [0] * (p + 1)
-    for index in range(p - 1, -1, -1):
-        suffix_m[index] = suffix_m[index + 1] + lengths_m[index]
-    z_a = Counter(
-        e_a - q * h - r * s * suffix_m[p - h]
-        for h in range(p - i_star + 1)
-    )
-    z_c = Counter(
-        e_c - r * s * cumulative_m[m] - q * m for m in range(p)
-    )
-
-    numerator = _convolve(z_a, x_c)
-    for exponent, coefficient in _convolve(x_a, z_c).items():
-        numerator[exponent] -= coefficient
-        if numerator[exponent] == 0:
-            del numerator[exponent]
-
-    coefficients = _divide_by_geometric_sum(numerator, r)
-    if coefficients != coefficients[::-1]:
-        raise ArithmeticError(
-            f"Alexander polynomial is not symmetric for {parameters}"
-        )
-    return coefficients
+    return unified_formula(parameters.p, parameters.q, parameters.r, parameters.s)
 
 
 def alexander_digest(coefficients: Sequence[int]) -> str:

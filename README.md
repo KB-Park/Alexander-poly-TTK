@@ -151,9 +151,14 @@ to reduce to \(P\ge Q>0\). Since the Alexander polynomial is invariant under
 mirroring, opposite signs of \(p,q\) replace \(s\) by \(-s\). The block
 formula is then evaluated exactly over the integers. The implementation also
 covers \(Q=1\), \(r=1,P,Q,P+Q\), and \(s=0\).
-At \(r=P+Q\), it uses the separate endpoint formula with
-\(M_0^*=1\) and forward partial sums in \(Z_a\); the endpoint
-is not classified as a torus knot in general.
+One adjusted block sequence,
+\(\widehat M_0=M_0-1\) and \(\widehat M_i=M_i\) for \(i>0\),
+is used in \(E_a\) and the suffix sums defining \(Z_a\). This gives a
+single formula throughout the range, including \(r=P+Q\), without an
+endpoint branch. The other block polynomials use the original \(M_i\).
+At the endpoint, the adjusted sequence is a palindrome, so this formula
+agrees with the forward-sum endpoint calculation. The endpoint is not
+classified as a torus knot in general.
 
 ## Endpoint-inclusive computations
 
@@ -161,7 +166,7 @@ The direct calculator now accepts the full range
 \(1\le r\le |p|+|q|\), including the trivial-twist boundary \(r=1\).
 The volume and HFK braid functions accept \(1\le r\le p+q\)
 for normalized \(p>q>0\), with positive, zero, or negative twists.
-Their endpoint Alexander calculation uses the same corrected formula as the
+Their Alexander calculation calls the same unified formula as the
 standalone calculator. The stored 52-case fiberedness experiment still
 concerns the strict complementary range; endpoint regression tests include
 independent braid/HFK comparisons for both twist signs.

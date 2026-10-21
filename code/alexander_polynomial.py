@@ -140,12 +140,10 @@ def _positive_formula(p: int, q: int, r: int, s: int) -> tuple[int, ...]:
         total += value
         cumulative_m.append(total)
 
-    lambda_star = (lengths_l[j_star] - 1) * s + 1
-    e_a = (
-        r * s * (cumulative_l[j_star - 1] if j_star else 0)
-        + p * j_star
-        + r * lambda_star
-    )
+    # The same adjusted blocks cover the strict range and r=p+q.
+    # M_0 never enters the truncated sums unless i_star=0.
+    adjusted_m = [lengths_m[0] - 1] + lengths_m[1:]
+    e_a = q * (p - i_star + 1) + r * s * sum(adjusted_m[i_star:])
     e_c = r * r * s + p * q
 
     x_a = Counter(
@@ -159,22 +157,11 @@ def _positive_formula(p: int, q: int, r: int, s: int) -> tuple[int, ...]:
 
     suffix_m = [0] * (p + 1)
     for index in range(p - 1, -1, -1):
-        suffix_m[index] = suffix_m[index + 1] + lengths_m[index]
-    if r == p + q:
-        # The terminal return word changes at this endpoint (M_0^*=1).
-        # Prefixes, rather than the strict-range suffixes, enter d r_1/dz.
-        modified_m = [1] + lengths_m[1:]
-        prefix_m = [0]
-        for value in modified_m:
-            prefix_m.append(prefix_m[-1] + value)
-        z_a = Counter(
-            e_a - q * h - r * s * prefix_m[h] for h in range(p + 1)
-        )
-    else:
-        z_a = Counter(
-            e_a - q * h - r * s * suffix_m[p - h]
-            for h in range(p - i_star + 1)
-        )
+        suffix_m[index] = suffix_m[index + 1] + adjusted_m[index]
+    z_a = Counter(
+        e_a - q * h - r * s * suffix_m[p - h]
+        for h in range(p - i_star + 1)
+    )
     z_c = Counter(
         e_c - r * s * cumulative_m[index] - q * index
         for index in range(p)
