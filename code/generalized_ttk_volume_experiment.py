@@ -3,13 +3,13 @@
 
 The parameter convention is T(p,q;r,s), where
 
-    p > q > 0, gcd(p,q) = 1, 0 < r < p+q, and s > 0.
+    p > q > 0, gcd(p,q) = 1, 0 < r <= p+q, and s is any integer.
 
 For r <= p, the knot is represented by the usual p-strand braid
 
     (sigma_1 ... sigma_{p-1})^q (sigma_1 ... sigma_{r-1})^(rs).
 
-For p < r < p+q, we use the positive (p+q)-strand Lorenz shuffle braid
+For p < r <= p+q, we use the positive (p+q)-strand Lorenz shuffle braid
 for T(p,q), followed by the full twist on its first r strands.  This avoids
 the expensive breadth-first Markov-destabilization search used by the
 exploratory scripts in this repository.
@@ -78,8 +78,8 @@ def validate_parameters(parameters: Parameters) -> None:
         raise ValueError("require p > q > 0")
     if gcd(p, q) != 1:
         raise ValueError("require gcd(p,q) = 1")
-    if not (0 < r < p + q):
-        raise ValueError("require 0 < r < p+q")
+    if not (0 < r <= p + q):
+        raise ValueError("require 0 < r <= p+q")
 
 
 def _convolve(left: Counter[int], right: Counter[int]) -> Counter[int]:
@@ -171,6 +171,10 @@ def alexander_coefficients(parameters: Parameters) -> tuple[int, ...]:
     )
     if r == 1:
         return torus_alexander_coefficients(p, q)
+
+    if r == p + q:
+        from alexander_polynomial import alexander_coefficients as full_formula
+        return full_formula(p, q, r, s)
 
     j_star = (-r * pow(p, -1, q)) % q
     s_values = [(-j * p) % q for j in range(q)]
@@ -291,7 +295,7 @@ def generalized_braid_word(parameters: Parameters) -> tuple[list[int], int]:
 def known_torus_type(parameters: Parameters) -> str:
     """Return a torus-knot description for elementary non-hyperbolic cases."""
     p, q, r, s = parameters.p, parameters.q, parameters.r, parameters.s
-    if r == 1:
+    if r == 1 or s == 0:
         return f"T({p},{q})"
     if q == 1:
         return f"T({r},{r * s + 1})"
@@ -313,7 +317,8 @@ def parameter_range(args: argparse.Namespace) -> Iterator[Parameters]:
             elif args.region == "new":
                 low, high = p + 1, p + q - 1
             else:
-                low, high = 1, p + q - 1
+                low = 1
+                high = p + q if getattr(args, "include_endpoint", False) else p + q - 1
             low = max(low, args.r_min if args.r_min is not None else low)
             high = min(high, args.r_max if args.r_max is not None else high)
             for r in range(low, high + 1):
@@ -672,6 +677,8 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
         default="collisions",
         help="compute only Alexander-collision groups, or every candidate",
     )
+    parser.add_argument("--include-endpoint", action="store_true",
+                        help="include r=p+q in --region all (historical scans exclude it)")
     parser.add_argument("--volume-tolerance", type=float, default=1e-8)
     parser.add_argument("--volume-epsilon", type=float, default=1e-7)
     parser.add_argument("--retries", type=int, default=5)
@@ -692,8 +699,10 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
         parser.error("require 2 <= p-min <= p-max")
     if args.q_min < 1:
         parser.error("require q-min >= 1")
-    if args.s_min < 1 or args.s_max < args.s_min:
-        parser.error("require 1 <= s-min <= s-max")
+    if args.s_max < args.s_min:
+        parser.error("require s-min <= s-max")
+    if args.include_endpoint and args.region != "all":
+        parser.error("--include-endpoint requires --region all")
     if args.workers < 1 or args.checkpoint_every < 1:
         parser.error("workers and checkpoint-every must be positive")
     if args.volume_tolerance <= 0 or args.volume_epsilon <= 0:
@@ -730,7 +739,10 @@ def _configuration(args: argparse.Namespace) -> dict:
         "isometry_signatures",
         "dry_run",
     )
-    return {name: getattr(args, name) for name in names}
+    result = {name: getattr(args, name) for name in names}
+    if args.include_endpoint:
+        result["include_endpoint"] = True
+    return result
 
 
 def run(args: argparse.Namespace) -> dict[str, int | float | str]:

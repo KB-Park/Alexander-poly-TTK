@@ -22,7 +22,7 @@ Spherogram and Szabó's HFK Calculator.
 
 - `code/alexander_polynomial.py`: standalone implementation of the
   unified formula for all nonzero relatively prime integers \(p,q\),
-  \(1<r<|p|+|q|\), and every integer \(s\).
+  \(1\le r\le |p|+|q|\), and every integer \(s\).
 - `code/generalized_ttk_volume_experiment.py`: Alexander-polynomial and
   hyperbolic-volume experiment, with checkpointing and optional interval
   certification.
@@ -34,9 +34,14 @@ Spherogram and Szabó's HFK Calculator.
   formula.
 - `code/check_non_l_space_family.py`: coefficient check for the infinite
   non-\(L\)-space family.
+- `code/check_non_l_space_2n_family.py`: coefficient check for
+  the two-parameter family \(T(2n+1,2n;3n,s)\), including the exceptional
+  small cases.
 - `code/check_fiberedness_end_families.py`: independent implementation
   of the Alexander formula and endpoint braid models used by the checks.
 - `code/test_generalized_ttk_volume_experiment.py`: regression tests.
+- `code/test_endpoint_formula.py`: endpoint algebra, torus specializations,
+  signed scan options, and independent braid/HFK regression tests.
 - `results/`: the machine-readable data used in the computational
   discussion.
 
@@ -89,7 +94,21 @@ Verify the coefficient obstruction for \(2\le k\le100\):
 python code/check_non_l_space_family.py --k-max 100
 ```
 
-These three commands do not perform a large volume or HFK search.
+Verify that \([t^{4n}]\Delta=2\) for the family
+\(T(2n+1,2n;3n,-1)\) when \(3\le n\le100\):
+
+```bash
+python code/check_non_l_space_2n_family.py --n-min 3 --n-max 100
+```
+
+Check both twist signs in a finite two-parameter box:
+
+```bash
+python code/check_non_l_space_2n_family.py \
+  --n-min 2 --n-max 30 --s-min -10 --s-max 10
+```
+
+These commands do not perform a large volume or HFK search.
 
 ## Direct Alexander-polynomial calculation
 
@@ -107,7 +126,7 @@ polynomial = alexander_polynomial(p, q, r, s)
 ```
 
 Here \(p,q\) may be any nonzero relatively prime integers,
-\(1<r<|p|+|q|\), and \(s\) may be any integer. The coefficient tuple is in
+\(1\le r\le |p|+|q|\), and \(s\) may be any integer. The coefficient tuple is in
 ascending exponent order, normalized to have lowest exponent zero and
 positive leading coefficient. For example:
 
@@ -128,10 +147,45 @@ and
 \overline{T(p,q;r,s)}\sim T(p,-q;r,-s)
 \]
 
-to reduce to \(P>Q>0\). Since the Alexander polynomial is invariant under
+to reduce to \(P\ge Q>0\). Since the Alexander polynomial is invariant under
 mirroring, opposite signs of \(p,q\) replace \(s\) by \(-s\). The block
 formula is then evaluated exactly over the integers. The implementation also
-covers \(Q=1\), the boundary values \(r=P,Q\), and \(s=0\).
+covers \(Q=1\), \(r=1,P,Q,P+Q\), and \(s=0\).
+At \(r=P+Q\), it uses the separate endpoint formula with
+\(M_0^*=1\) and forward partial sums in \(Z_a\); the endpoint
+is not classified as a torus knot in general.
+
+## Endpoint-inclusive computations
+
+The direct calculator now accepts the full range
+\(1\le r\le |p|+|q|\), including the trivial-twist boundary \(r=1\).
+The volume and HFK braid functions accept \(1\le r\le p+q\)
+for normalized \(p>q>0\), with positive, zero, or negative twists.
+Their endpoint Alexander calculation uses the same corrected formula as the
+standalone calculator. The stored 52-case fiberedness experiment still
+concerns the strict complementary range; endpoint regression tests include
+independent braid/HFK comparisons for both twist signs.
+
+Historical volume scans keep \(r<p+q\) by default. To include the
+endpoint and signed twists in a new run, use a new output directory:
+
+```bash
+python code/generalized_ttk_volume_experiment.py \
+  --p-max 6 --s-min -1 --s-max 1 --region all --include-endpoint \
+  --volume-scope all --workers 2 --output-dir output/endpoint-volume
+```
+
+Then the HFK script can process every row of that endpoint-inclusive run:
+
+```bash
+python code/generalized_ttk_hfk_experiment.py \
+  output/endpoint-volume --selection all-knots --max-crossings 100 \
+  --timeout 60 --workers 2
+```
+
+The existing stored volume and HFK data are unchanged. These commands may
+produce timeouts on difficult diagrams; they do not assert fiberedness
+without a completed HFK calculation.
 
 ## Volume computations
 

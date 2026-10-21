@@ -104,9 +104,9 @@ class GeneralAlexanderPolynomialTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             alexander_coefficients(6, 4, 3, 1)
         with self.assertRaises(ValueError):
-            alexander_coefficients(5, 2, 1, 1)
+            alexander_coefficients(5, 2, 0, 1)
         with self.assertRaises(ValueError):
-            alexander_coefficients(5, 2, 7, 1)
+            alexander_coefficients(5, 2, 8, 1)
         with self.assertRaises(TypeError):
             alexander_coefficients(5, 2, 3, 1.0)
 

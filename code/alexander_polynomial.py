@@ -2,7 +2,7 @@
 """Compute the Alexander polynomial of a twisted torus knot.
 
 The input is T(p,q;r,s), where p and q are nonzero relatively prime
-integers, 1 < r < |p|+|q|, and s is any integer.  The output is normalized
+integers, 1 <= r <= |p|+|q|, and s is any integer.  The output is normalized
 up to the usual multiplication by +/-t^k: the lowest exponent is zero and
 the leading coefficient is positive.
 
@@ -17,12 +17,12 @@ from math import gcd
 
 
 def normalize_parameters(p: int, q: int, r: int, s: int) -> tuple[int, int, int, int]:
-    """Reduce the parameters to P > Q > 0 using the paper's symmetries.
+    """Reduce the parameters to P >= Q > 0 using the paper's symmetries.
 
     Simultaneous sign reversal of p and q preserves the knot.  If p and q
     have opposite signs, mirroring makes them have the same sign and changes
     s to -s; the Alexander polynomial is unchanged by mirroring.  Exchanging
-    p and q then gives P > Q > 0.
+    p and q then gives P >= Q > 0.
     """
     for name, value in (("p", p), ("q", q), ("r", r), ("s", s)):
         if isinstance(value, bool) or not isinstance(value, int):
@@ -31,14 +31,10 @@ def normalize_parameters(p: int, q: int, r: int, s: int) -> tuple[int, int, int,
         raise ValueError("p and q must be nonzero")
     if gcd(abs(p), abs(q)) != 1:
         raise ValueError("p and q must be relatively prime")
-    if not (1 < r < abs(p) + abs(q)):
-        raise ValueError("require 1 < r < |p|+|q|")
+    if not (1 <= r <= abs(p) + abs(q)):
+        raise ValueError("require 1 <= r <= |p|+|q|")
 
     p_abs, q_abs = abs(p), abs(q)
-    if p_abs == q_abs:
-        # Relative primeness forces p_abs=q_abs=1, for which no admissible
-        # integer r exists; keep the error explicit for direct callers.
-        raise ValueError("require |p| and |q| to be distinct")
     P, Q = max(p_abs, q_abs), min(p_abs, q_abs)
     S = s if p * q > 0 else -s
     return P, Q, r, S
@@ -112,8 +108,8 @@ def _torus_alexander_coefficients(p: int, q: int) -> tuple[int, ...]:
 
 
 def _positive_formula(p: int, q: int, r: int, s: int) -> tuple[int, ...]:
-    """Apply the unified block formula for p > q > 0."""
-    if s == 0:
+    """Apply the unified block formula for p >= q > 0."""
+    if s == 0 or r == 1:
         return _torus_alexander_coefficients(p, q)
 
     # Python defines the unique residue modulo 1 to be zero, so the same
@@ -126,8 +122,8 @@ def _positive_formula(p: int, q: int, r: int, s: int) -> tuple[int, ...]:
     if numerator_i % q:
         raise ArithmeticError("the index i_star is not integral")
     i_star = p + 1 - numerator_i // q
-    if not (1 <= i_star <= p):
-        raise ArithmeticError("the index i_star is outside 1,...,p")
+    if not (0 <= i_star <= p) or (i_star == 0 and r != p + q):
+        raise ArithmeticError("the index i_star is outside its allowed range")
 
     t_values = [(-i * q) % p for i in range(p)]
     lengths_m = [(r - 1 - value) // p + 1 for value in t_values]
@@ -164,10 +160,21 @@ def _positive_formula(p: int, q: int, r: int, s: int) -> tuple[int, ...]:
     suffix_m = [0] * (p + 1)
     for index in range(p - 1, -1, -1):
         suffix_m[index] = suffix_m[index + 1] + lengths_m[index]
-    z_a = Counter(
-        e_a - q * h - r * s * suffix_m[p - h]
-        for h in range(p - i_star + 1)
-    )
+    if r == p + q:
+        # The terminal return word changes at this endpoint (M_0^*=1).
+        # Prefixes, rather than the strict-range suffixes, enter d r_1/dz.
+        modified_m = [1] + lengths_m[1:]
+        prefix_m = [0]
+        for value in modified_m:
+            prefix_m.append(prefix_m[-1] + value)
+        z_a = Counter(
+            e_a - q * h - r * s * prefix_m[h] for h in range(p + 1)
+        )
+    else:
+        z_a = Counter(
+            e_a - q * h - r * s * suffix_m[p - h]
+            for h in range(p - i_star + 1)
+        )
     z_c = Counter(
         e_c - r * s * cumulative_m[index] - q * index
         for index in range(p)
